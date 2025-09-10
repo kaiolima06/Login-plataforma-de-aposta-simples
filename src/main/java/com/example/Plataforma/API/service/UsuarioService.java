@@ -4,6 +4,8 @@ import com.example.Plataforma.API.DTO.UsuarioDTO;
 import com.example.Plataforma.domain.model.Usuario;
 import com.example.Plataforma.domain.Exceptions.UserNotfound;
 import com.example.Plataforma.domain.Repository.UsuarioRepository;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
@@ -15,15 +17,18 @@ public class UsuarioService {
     @Autowired
     UsuarioRepository usuarioRepository;
 
+    private static final Logger log = LoggerFactory.getLogger(UsuarioService.class);
+
     public UsuarioService (UsuarioRepository usuarioRepository) {
 
         this.usuarioRepository = usuarioRepository;
     }
 
     public Usuario autenticar(String email, String senha) {
+        log.info("Iniciando Auth");
         return usuarioRepository.findByEmail(email)
                 .filter(usuarioDTO -> usuarioDTO.getSenha().equals(senha.trim()))
-                .orElseThrow(() -> new UserNotfound("Usuario ou senha invalidos"));
+                .orElseThrow(() ->  new UserNotfound("Usuario ou senha invalidos"));
     }
 
     public Usuario buscarPorId(Long id) {
@@ -31,8 +36,10 @@ public class UsuarioService {
     }
 
     public String register(UsuarioDTO usuarioDTO) {
+        log.info("Buscando id");
 
         if (usuarioRepository.findByEmail(usuarioDTO.getEmail()).isPresent()) {
+            log.warn("Usuário ja existente");
             throw new UserNotfound("Usuário ja existe");
         }
 
@@ -43,6 +50,7 @@ public class UsuarioService {
         novousuario.setCpf(usuarioDTO.getCpf());
         novousuario.setNome(usuarioDTO.getNome());
         usuarioRepository.save(novousuario);
+        log.info("salvando usuario no banco");
 
         String resposta = "Login criado";
         return resposta;
